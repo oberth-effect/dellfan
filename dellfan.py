@@ -5,6 +5,7 @@ import psutil
 import subprocess
 import sys
 import time
+import sd_notify
 
 
 def ipmi_raw(bytes_):
@@ -17,6 +18,10 @@ def ipmi_raw(bytes_):
 # https://www.reddit.com/r/homelab/comments/7xqb11/dell_fan_noise_control_silence_your_poweredge/
 def ipmi_disable_fan_control():
     ipmi_raw([0x30, 0x30, 0x01, 0x00])
+
+
+def ipmi_enable_fan_control():
+    ipmi_raw([0x30, 0x30, 0x01, 0x01])
 
 
 def ipmi_set_fan_speed(speed):
@@ -38,6 +43,7 @@ def temperature_to_fan_speed(temperature):
 
 
 if __name__ == "__main__":
+    n = sd_notify.Notifier()
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-r", "--poll-rate",
@@ -55,6 +61,10 @@ if __name__ == "__main__":
         "-m", "--min-speed",
         type=float, default=0.18
     )
+    parser.add_argument(
+        "--cleanup",
+        action="store_true",
+    )
     args = parser.parse_args()
 
     if args.dump_curve:
@@ -63,11 +73,17 @@ if __name__ == "__main__":
             print(t, temperature_to_fan_speed(t))
         sys.exit()
 
-    # TODO: Systemd watchdog
+    if args.cleanup:
+        #Re-enable default fan control
+        print("Enabling automatic fan control")
+        ipmi_enable_fan_control()
+        sys.exit()
 
-    # TODO: Trap kills and enable
     print("Disabling automatic fan control")
     ipmi_disable_fan_control()
+
+    #Report ready service state
+    n.ready()
 
     print("Entering the feedback loop")
     next_run = time.monotonic()
@@ -88,3 +104,6 @@ if __name__ == "__main__":
         ipmi_set_fan_speed(fan_speed)
         if args.print:
             print(temperature, fan_speed)
+        
+        #Notify Watchdog
+        n.notify()

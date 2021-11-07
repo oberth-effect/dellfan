@@ -3,10 +3,13 @@ Description=Dell Fan control service
 Requires=dev-ipmi0.device
 
 [Service]
+Type=notify
 EnvironmentFile=-/etc/default/dellfan
 ExecStart=/usr/sbin/dellfan.py $ARGS
 User=root
 Restart=on-failure
+ExecStopPost=/usr/sbin/dellfan.py --cleanup
+WatchdogSec=70
 
 [Install]
 WantedBy=multi-user.target
