@@ -78,7 +78,17 @@ if __name__ == "__main__":
         print("Enabling automatic fan control")
         ipmi_enable_fan_control()
         sys.exit()
-
+ 
+    if args.poll_rate > 60:
+        print("Provided poll rate is longer than 60s, setting poll rate to 60s")
+        args.poll_rate = 60.
+    elif args.poll_rate < 0:
+        print("Poll rate must be positive. Defaulting to 10s")
+        args.poll_rate = 10.
+    else:
+        pass
+    
+    print(args.poll_rate)
     print("Disabling automatic fan control")
     ipmi_disable_fan_control()
 
