@@ -5,7 +5,7 @@ import psutil
 import subprocess
 import sys
 import time
-import sd_notify
+from systemd.daemon import notify
 
 
 def ipmi_raw(bytes_):
@@ -43,7 +43,6 @@ def temperature_to_fan_speed(temperature):
 
 
 if __name__ == "__main__":
-    n = sd_notify.Notifier()
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-r", "--poll-rate",
@@ -92,8 +91,9 @@ if __name__ == "__main__":
     print("Disabling automatic fan control")
     ipmi_disable_fan_control()
 
-    #Report ready service state
-    n.ready()
+    #Report startup compleate as per sd_notify() state
+    notify("READY=1")
+
 
     print("Entering the feedback loop")
     next_run = time.monotonic()
@@ -115,5 +115,6 @@ if __name__ == "__main__":
         if args.print:
             print(temperature, fan_speed)
         
-        #Notify Watchdog
-        n.notify()
+        #Notify Watchdog and update STATUS
+        notify("WATCHDOG=1")
+        notify(f"STATUS=Temperature={temperature}°C Fan Speed={fan_speed}%")
