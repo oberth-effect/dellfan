@@ -116,4 +116,4 @@ if __name__ == "__main__":
         
         #Notify Watchdog and update STATUS
         notify("WATCHDOG=1")
-        notify(f"STATUS=Temperature={temperature}°C Fan Speed={fan_speed}%")
+        notify(f"STATUS=Temperature={temperature}°C Fan Speed={fan_speed*100}%")
