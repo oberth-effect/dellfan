@@ -87,7 +87,6 @@ if __name__ == "__main__":
     else:
         pass
     
-    print(args.poll_rate)
     print("Disabling automatic fan control")
     ipmi_disable_fan_control()
 
